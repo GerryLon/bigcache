@@ -1,10 +1,23 @@
 # BigCache [![Build Status](https://github.com/allegro/bigcache/workflows/build/badge.svg)](https://github.com/allegro/bigcache/actions?query=workflow%3Abuild)&nbsp;[![Coverage Status](https://coveralls.io/repos/github/allegro/bigcache/badge.svg?branch=master)](https://coveralls.io/github/allegro/bigcache?branch=master)&nbsp;[![GoDoc](https://godoc.org/github.com/allegro/bigcache?status.svg)](https://godoc.org/github.com/allegro/bigcache)&nbsp;[![Go Report Card](https://goreportcard.com/badge/github.com/allegro/bigcache)](https://goreportcard.com/report/github.com/allegro/bigcache)
 
-Fast, concurrent, evicting in-memory cache written to keep big number of entries without impact on performance.
-BigCache keeps entries on heap but omits GC for them. To achieve that, operations on byte slices take place,
-therefore entries (de)serialization in front of the cache will be needed in most use cases.
+A fast, concurrent, evicting in-memory cache designed to handle a large number of entries without impacting performance.
+BigCache keeps entries on the heap but omits GC for them. To achieve this, operations on byte slices take place,
+so entries will need (de)serialization in front of the cache in most use cases.
 
 Requires Go 1.12 or newer.
+
+## Table of Contents
+
+- [Usage](#usage)
+  - [Simple initialization](#simple-initialization)
+  - [Custom initialization](#custom-initialization)
+  - [LifeWindow & CleanWindow](#lifewindow--cleanwindow)
+- [Benchmarks](#benchmarks)
+- [How it works](#how-it-works)
+- [Bigcache vs Freecache](#bigcache-vs-freecache)
+- [HTTP Server](#http-server)
+- [More](#more)
+- [License](#license)
 
 ## Usage
 
@@ -23,8 +36,8 @@ fmt.Println(string(entry))
 
 ### Custom initialization
 
-When cache load can be predicted in advance then it is better to use custom initialization because additional memory
-allocation can be avoided in that way.
+When cache load can be predicted in advance, it's better to use custom initialization to avoid additional memory
+allocation.
 
 ```go
 import (
@@ -142,7 +155,7 @@ GC pause for freecache:  5.594416ms
 GC pause for map:  9.347015ms
 ```
 
-```
+```bash
 go version
 go version go1.13 linux/arm64
 
@@ -162,17 +175,17 @@ You may encounter system memory reporting what appears to be an exponential incr
 
 ## How it works
 
-BigCache relies on optimization presented in 1.5 version of Go ([issue-9477](https://github.com/golang/go/issues/9477)).
-This optimization states that if map without pointers in keys and values is used then GC will omit its content.
-Therefore BigCache uses `map[uint64]uint32` where keys are hashed and values are offsets of entries.
+BigCache relies on an optimization introduced in Go 1.5 ([issue-9477](https://github.com/golang/go/issues/9477)).
+This optimization states that if a map without pointers in keys and values is used, then GC will omit its content.
+Therefore, BigCache uses `map[uint64]uint32` where keys are hashed and values are offsets of entries.
 
-Entries are kept in byte slices, to omit GC again.
-Byte slices size can grow to gigabytes without impact on performance
-because GC will only see single pointer to it.
+Entries are kept in byte slices to omit GC again.
+Byte slice size can grow to gigabytes without impacting performance
+because GC will only see a single pointer to it.
 
 ### Collisions
 
-BigCache does not handle collisions. When new item is inserted and it's hash collides with previously stored item, new item overwrites previously stored value.
+BigCache does not handle collisions. When a new item is inserted and its hash collides with a previously stored item, the new item overwrites the previously stored value.
 
 ## Bigcache vs Freecache
 
@@ -181,19 +194,19 @@ Bigcache relies on `map[uint64]uint32`, freecache implements its own mapping bui
 slices to reduce number of pointers.
 
 Results from benchmark tests are presented above.
-One of the advantage of bigcache over freecache is that you don’t need to know
-the size of the cache in advance, because when bigcache is full,
+One advantage of BigCache over freecache is that you don’t need to know
+the size of the cache in advance. When BigCache is full,
 it can allocate additional memory for new entries instead of
 overwriting existing ones as freecache does currently.
-However hard max size in bigcache also can be set, check [HardMaxCacheSize](https://godoc.org/github.com/allegro/bigcache#Config).
+However, a hard max size can also be set in BigCache - see [HardMaxCacheSize](https://godoc.org/github.com/allegro/bigcache#Config).
 
 ## HTTP Server
 
-This package also includes an easily deployable HTTP implementation of BigCache, which can be found in the [server](/server) package.
+This package also includes an easily deployable HTTP implementation of BigCache, which can be found in the [server](server/) package.
 
 ## More
 
-Bigcache genesis is described in allegro.tech blog post: [writing a very fast cache service in Go](http://allegro.tech/2016/03/writing-fast-cache-service-in-go.html)
+BigCache's genesis is described in the allegro.tech blog post: [Writing a very fast cache service in Go](http://allegro.tech/2016/03/writing-fast-cache-service-in-go.html)
 
 ## License
 
